@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pong game rankings</title>
+    </head>
+    <body>
+        <h1 class="title">Global ranks:</h1>
+
+        <div class="board" id="board">
+            <div class="table-row">
+                <h2>1.</h2>
+                <h2>Please wait...</h2>
+                <h2>0 pts.</h2>
+            </div>
+        </div>
+    </body>
+</html>
+
+<style>
+    html {
+        background-color: #F6F5AE;
+        color: #2A2D34;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h1 {
+        font-size: 10vw;
+    }
+
+    h2 {
+        font-size: 2.5vw;
+    }
+
+    .board {
+        background-color: #F3F191;
+        box-shadow: 0 0 20px #2E86AB;
+        border-radius: 10px;
+        border-color: #2E86AB;
+        border-style: solid;
+        border-width: 5px;
+
+        min-height: 75vh;
+        width: 80vw;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .table-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 95%;
+        margin: 10px;
+        padding: 10px;
+
+        color: #F24236;
+
+        box-shadow: 0 0 20px #F24236;
+        border-radius: 10px;
+        border-color: #F24236;
+        border-style: solid;
+        border-width: 5px;
+    }
+</style>
+
+<script>
+
+    // Find the board
+    let board = document.getElementById("board");
+
+    // Connect to the WebSocket server
+    const socket = new WebSocket('ws://{REMOTE-IP}/ws'); // Use ws:// or wss://
+
+    // Connection opened
+    socket.addEventListener('open', function (event) {
+        console.log('Connected to the WebSocket server');
+        setInterval(() => {socket.send("get_scores")}, 2000);
+    });
+
+    // Message received from the server
+    socket.addEventListener('message', function (event) {
+        // Clear the data inside of the board
+        board.innerHTML = "";
+        
+        // Parse JSON data about the rankings
+        let data = JSON.parse(event.data);
+
+        // Loop through elements and add them to the row
+        for (let i = 0; i < data.length; i++) {
+            // Create table row
+            const tableRow = document.createElement('div');
+            tableRow.className = "table-row";
+
+            // Create elements inside the row
+            const place = document.createElement('h2');
+            place.textContent = i+1+".";
+
+            const score = document.createElement('h2');
+            score.textContent = data[i].score + " pts.";
+
+            const user_name = document.createElement('h2');
+            let user_name_data = data[i].user_name;
+            console.log(user_name_data)
+            if (user_name_data.Valid == false) {
+                user_name.textContent = "Anonymous";
+            } else {
+                user_name.textContent = user_name_data.String;
+            }
+
+            // Append data to the table row
+            tableRow.appendChild(place);
+            tableRow.appendChild(user_name);
+            tableRow.appendChild(score);
+
+            // Add the row to the board
+            board.appendChild(tableRow);
+        }
+
+    });
+
+</script>
